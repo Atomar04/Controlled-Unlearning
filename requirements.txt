@@ -1,0 +1,11 @@
+torch>=2.0.0
+numpy==1.23.5
+gymnasium==0.28.1
+safety-gymnasium>=1.0.0
+highway-env>=1.8.0
+wandb>=0.15.0
+moviepy>=1.0.3
+matplotlib>=3.7.0
+tqdm>=4.65.0
+tensorboard>=2.13.0
+pandas>=2.0.0
