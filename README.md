@@ -1,4 +1,4 @@
-# Targeted Reinforcement Unlearning via PID Lagrangian Control
+# Controlled Unlearning
 
 This repository contains the official implementation of our framework for **Targeted Reinforcement Unlearning** in continuous control environments. 
 
