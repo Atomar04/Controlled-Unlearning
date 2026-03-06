@@ -9,7 +9,7 @@ Our method performs post-hoc safety repair on pre-trained, unconstrained Reinfor
 ## Repository Structure
 
 ```text
-ReUle/
+Controlled-Unlearning/
 ├── reifule/
 │   ├── algorithm.py           # Dual-Head PPO Unlearner architecture
 │   └── computation_amnesiac.py# Vectorized GAE and PID Lagrangian Controller
