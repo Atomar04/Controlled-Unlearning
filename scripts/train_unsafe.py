@@ -25,7 +25,8 @@ def make_env(env_id: str, n_envs: int = 1):
 def train_unsafe(args):
     wandb.init(
         project=args.project,
-        name=f"Unsafe_{args.env}_E{args.n_envs}_Seed{args.seed}",
+        name=f"Unsafe_{args.env}_Seed{args.seed}",
+        group=f"Unsafe_{args.env}",
         config=vars(args),
     )
 
@@ -124,12 +125,12 @@ def train_unsafe(args):
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--env", type=str, default="SafetyPointGoal1-v0")
-    p.add_argument("--project", type=str, default="Reinforcement-Unlearning")
+    p.add_argument("--project", type=str, default="Reifule")
     p.add_argument("--seed", type=int, default=0)
 
     p.add_argument("--n_envs", type=int, default=8)
     p.add_argument("--horizon", type=int, default=1024)
-    p.add_argument("--updates", type=int, default=140)
+    p.add_argument("--updates", type=int, default=300)
 
     p.add_argument("--lr", type=float, default=3e-4)
     p.add_argument("--ent_coef", type=float, default=0.03)
