@@ -8,13 +8,14 @@ import wandb
 
 from reifule.algorithm import PPOUnlearner
 from reifule.computation_amnesiac import PIDLagrangian
-from scripts.agent import make_env
+from scripts.train_unsafe import make_env
 
 
 def train_oracle(args):
     wandb.init(
         project=args.project,
-        name=f"Oracle_{args.env}_E{args.n_envs}_Seed{args.seed}",
+        name=f"Oracle_{args.env}_Seed{args.seed}",
+        group=f"Oracle_{args.env}",
         config=vars(args),
     )
 
@@ -43,8 +44,9 @@ def train_oracle(args):
     obs = reset_out[0] if isinstance(reset_out, tuple) else reset_out
 
     global_step = 0
+    save_points = [300, 350, 400, 450]
 
-    for update in range(args.updates):
+    for update in range(1, args.updates + 1):
         buf = {
             "states": [],
             "actions": [],
@@ -105,12 +107,12 @@ def train_oracle(args):
 
         wandb.log(
             {
-                "Oracle/Update": update,
-                "Oracle/Lambda": lambda_val,
-                "Oracle/Batch_MeanRewardStep": mean_reward_step,
-                "Oracle/Batch_Cost_Rate": mean_cost_rate,
-                "Oracle/PID_Error": mean_cost_rate - args.target_cost,
-                "Oracle/Loss": loss,
+                "Train/Update": update,
+                "Train/Lambda": lambda_val,
+                "Train/Batch_MeanRewardStep": mean_reward_step,
+                "Train/Batch_Cost_Rate": mean_cost_rate,
+                "Train/PID_Error": mean_cost_rate - args.target_cost,
+                "Train/Loss": loss,
             },
             step=global_step,
         )
@@ -122,32 +124,42 @@ def train_oracle(args):
             f"Lambda {lambda_val:.3f} | "
             f"Loss {loss:.4f}"
         )
+        print(
+            f"Update {update} | Rew {mean_reward_step:.4f} | "
+            f"Cost {mean_cost_rate:.4f} | Lambda {lambda_val:.3f}"
+        )
 
-    save_path = f"oracle_agent_{args.env}.pt"
-    agent.save(save_path)
-    wandb.save(save_path)
-    wandb.finish()
+        # ---- SAVE CHECKPOINTS ----
+        if update in save_points:
+            path = f"oracle_{args.env}_{update}.pt"
+            agent.save(path)
+            wandb.save(path)
+
+    # save_path = f"oracle_agent_{args.env}.pt"
+    # agent.save(save_path)
+    # wandb.save(save_path)
+    # wandb.finish()
 
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--env", type=str, default="SafetyPointGoal1-v0")
-    p.add_argument("--project", type=str, default="Reinforcement-Unlearning")
+    p.add_argument("--project", type=str, default="Reifule")
     p.add_argument("--seed", type=int, default=0)
 
-    p.add_argument("--kp", type=float, default=0.1)
+    p.add_argument("--kp", type=float, default=0.5)
     p.add_argument("--ki", type=float, default=0.003)
-    p.add_argument("--kd", type=float, default=0.01)
+    p.add_argument("--kd", type=float, default=0.02)
 
     p.add_argument("--lambda_init", type=float, default=0.0)
     p.add_argument("--lambda_max", type=float, default=200.0)
     p.add_argument("--integral_max", type=float, default=5.0)
 
-    p.add_argument("--target_cost", type=float, default=0.05)
+    p.add_argument("--target_cost", type=float, default=0.03)
 
     p.add_argument("--n_envs", type=int, default=8)
     p.add_argument("--horizon", type=int, default=1024)
-    p.add_argument("--updates", type=int, default=140)  # match unsafe compute budget
+    p.add_argument("--updates", type=int, default=450)  # match unsafe compute budget
 
     p.add_argument("--lr", type=float, default=3e-4)
     p.add_argument("--ent_coef", type=float, default=0.03)
