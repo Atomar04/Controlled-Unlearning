@@ -4,8 +4,12 @@ import wandb
 
 from reifule.algorithm import PPOUnlearner
 from reifule.computation_amnesiac import PIDLagrangian
-from reifule.utils import make_env, extract_cforget, model_checkpoint_path
-
+from reifule.utils import (
+    make_env,
+    set_seed,
+    extract_cforget,
+    model_checkpoint_path,
+)
 
 def train_oracle(args):
     wandb.init(
@@ -15,9 +19,8 @@ def train_oracle(args):
         config=vars(args),
     )
 
+    set_seed(args.seed)
     env = make_env(args.env, n_envs=args.n_envs)
-    np.random.seed(args.seed)
-
     agent = PPOUnlearner(
         env,
         lr=args.lr,
@@ -124,6 +127,8 @@ def train_oracle(args):
             path = model_checkpoint_path("oracle", args.env, update)
             agent.save(path)
             wandb.save(path)
+    env.close()
+    wandb.finish()
 
 
 if __name__ == "__main__":

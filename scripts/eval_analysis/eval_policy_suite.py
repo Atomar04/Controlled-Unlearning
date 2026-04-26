@@ -88,15 +88,14 @@ def discover_model_specs(env_id: str):
         )
 
     families = [
-        ("oracle", r"oracle_.*_(\d+)\.pt$"),
-        ("concept", r"safe_concept_.*_(\d+)\.pt$"),
-        ("trajectory_decremental", r"safe_trajectory_decremental_.*_(\d+)\.pt$"),
-        ("repedit", r"safe_repedit_.*_(\d+)\.pt$"),
+        "oracle",
+        "concept",
+        "trajectory_decremental",
+        "repedit",
     ]
 
-    for family, _ in families:
+    for family in families:
         folder = artifact_dir("models", family)
-        pattern = str(folder / "*.pt")
 
         for path in sorted(Path(folder).glob("*.pt")):
             update = _parse_update_from_name(str(path), env_id)
@@ -115,7 +114,7 @@ def discover_model_specs(env_id: str):
     for spec in specs:
         if env_id in Path(spec["path"]).name or spec["family"] == "unsafe":
             filtered.append(spec)
-
+    
     # Sort for stable ordering.
     family_order = {
         "unsafe": 0,
