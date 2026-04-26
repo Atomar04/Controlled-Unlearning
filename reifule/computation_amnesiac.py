@@ -6,8 +6,8 @@ class PIDLagrangian:
     """
     Incremental PID controller for Lagrange multiplier λ.
 
-    λ_{k+1} = clip( λ_k + Kp*e + Ki*I + Kd*(e - e_prev), 0, λ_max )
-    where e = J_C - d.
+    λ_{k+1} = clip(λ_k + Kp*e + Ki*I + Kd*(e - e_prev), 0, λ_max)
+    where e = J_C - d
     """
 
     def __init__(
@@ -34,30 +34,51 @@ class PIDLagrangian:
 
     def update(self, current_cost: float) -> float:
         error = float(current_cost) - self.d
+
         self.err_integral = float(
-            np.clip(self.err_integral + error, -self.integral_max, self.integral_max)
+            np.clip(
+                self.err_integral + error,
+                -self.integral_max,
+                self.integral_max,
+            )
         )
         derivative = error - self.prev_err
 
-        delta = (self.Kp * error) + (self.Ki * self.err_integral) + (self.Kd * derivative)
-        self.lambda_val = float(np.clip(self.lambda_val + delta, 0.0, self.lambda_max))
+        delta = (
+            self.Kp * error
+            + self.Ki * self.err_integral
+            + self.Kd * derivative
+        )
+        self.lambda_val = float(
+            np.clip(self.lambda_val + delta, 0.0, self.lambda_max)
+        )
 
         self.prev_err = error
         return self.lambda_val
 
 
-def compute_gae_te(rewards_te, values_te, next_values_e, gamma, lam, dones_te):
+def compute_gae_te(
+    rewards_te,
+    values_te,
+    next_values_e,
+    gamma,
+    lam,
+    dones_te,
+):
     """
     Vector-env GAE over (T, E).
 
-    rewards_te: np.ndarray [T, E]
-    values_te:  torch.Tensor [T, E]
-    next_values_e: np.ndarray [E] bootstrap value after last step
-    dones_te:   np.ndarray [T, E] float/bool where 1.0 means TERMINAL for GAE
-               (IMPORTANT: pass terminated, NOT terminated|truncated)
+    Args:
+        rewards_te: np.ndarray [T, E]
+        values_te: torch.Tensor [T, E]
+        next_values_e: np.ndarray [E] bootstrap value after last step
+        gamma: float
+        lam: float
+        dones_te: np.ndarray [T, E]
+            IMPORTANT: pass terminated, not terminated|truncated
 
     Returns:
-      adv_te: torch.Tensor [T, E] (cpu tensor)
+        adv_te: torch.Tensor [T, E] on CPU
     """
     rewards = np.asarray(rewards_te, dtype=np.float32)
     dones = np.asarray(dones_te, dtype=np.float32)
@@ -67,11 +88,12 @@ def compute_gae_te(rewards_te, values_te, next_values_e, gamma, lam, dones_te):
     adv = np.zeros((T, E), dtype=np.float32)
     last_gae = np.zeros((E,), dtype=np.float32)
 
-    v = values_te.detach().cpu().numpy().astype(np.float32)  # [T,E]
+    v = values_te.detach().cpu().numpy().astype(np.float32)
 
     for t in reversed(range(T)):
-        non_terminal = 1.0 - dones[t]                       # [E]
-        v_next = next_values if (t == T - 1) else v[t + 1]  # [E]
+        non_terminal = 1.0 - dones[t]
+        v_next = next_values if (t == T - 1) else v[t + 1]
+
         delta = rewards[t] + gamma * v_next * non_terminal - v[t]
         last_gae = delta + gamma * lam * non_terminal * last_gae
         adv[t] = last_gae
