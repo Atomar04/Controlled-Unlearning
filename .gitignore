@@ -9,8 +9,8 @@ __pycache__/
 #wandb logs
 wandb
 
-#models and artifacts
-artifacts
+#artifacts
+artifacts/
 
 # Distribution / packaging
 .Python
