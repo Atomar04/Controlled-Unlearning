@@ -67,7 +67,7 @@ def discover_model_specs(env_id: str):
 
     Returns a list of dicts:
       {
-        "family": "unsafe" | "oracle" | "concept" | "trajectory_decremental" | "repedit",
+        "family": "unsafe" | "oracle" | "concept" | "localized_concept" | "trajectory_decremental" | "repedit",
         "label":  str,
         "path":   str,
         "update": int | None,
@@ -90,12 +90,16 @@ def discover_model_specs(env_id: str):
     families = [
         "oracle",
         "concept",
+        "localized_concept",
         "trajectory_decremental",
         "repedit",
     ]
 
     for family in families:
         folder = artifact_dir("models", family)
+
+        if not Path(folder).exists():
+            continue
 
         for path in sorted(Path(folder).glob("*.pt")):
             update = _parse_update_from_name(str(path), env_id)
@@ -120,8 +124,9 @@ def discover_model_specs(env_id: str):
         "unsafe": 0,
         "oracle": 1,
         "concept": 2,
-        "trajectory_decremental": 3,
-        "repedit": 4,
+        "localized_concept": 3,
+        "trajectory_decremental": 4,
+        "repedit": 5,
     }
 
     filtered.sort(
